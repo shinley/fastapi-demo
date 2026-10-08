@@ -1,0 +1,9 @@
+[project]
+name = "fastapi-test"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "aiomysql>=0.3.2",
+    "fastapi>=0.142.4",
+    "sqlalchemy[asyncio]>=2.1.4",
+]
