@@ -78,3 +78,16 @@ async def update_user(db: AsyncSession, username: str, user_data: UserUpdateRequ
 
     # 检查更新
     return result.rowcount > 0
+
+
+async def change_password(db: AsyncSession, user: User, old_password: str, new_password: str):
+    if not security.verify_password(old_password, user.password):
+        return False
+
+    hash_passwd = security.get_hash_password(new_password)
+    user.password = hash_passwd
+    db.add(user) # 最好加上这一句
+    await db.commit()
+
+    return True
+
