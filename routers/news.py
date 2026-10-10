@@ -1,16 +1,17 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-
-
 from config.db_config import get_db
 from crud import news
+from crud import news_cache
+
 # 创建APIRouter 实例
 router = APIRouter(prefix="/api/news", tags=["news"])
 
-@router.get("/categries")
+@router.get("/categories")
 async def get_categories(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
-    categories = await news.get_categories(db, skip, limit)
+    print("获取新闻分类")
+    categories = await news_cache.get_categories(db, skip, limit)
     return {
         "code": 200,
         "message": "success",
