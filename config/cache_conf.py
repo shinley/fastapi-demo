@@ -26,7 +26,7 @@ async def get_json_cache(key: str):
         return None
 
 # 设置缓存
-async def set_cache(key: str, value: any, expire: int = -1):
+async def set_cache(key: str, value: any, expire = None):
     try:
         if isinstance(value, (dict, list)):
             # 转字符串再存

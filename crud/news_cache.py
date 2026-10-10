@@ -2,8 +2,9 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from cache.news_cache import get_cached_categories, set_cached_categories
+from cache.news_cache import get_cached_categories, set_cached_categories, get_cache_news_list, set_cache_news_list
 from models.news import Category, News
+from schemas.base import NewsItemBase
 
 
 async def get_categories(db: AsyncSession, skip: int = 0, limit: int = 100):
@@ -26,9 +27,28 @@ async def get_categories(db: AsyncSession, skip: int = 0, limit: int = 100):
 
 
 async def get_news_list(db: AsyncSession, category_id: int, skip: int = 0, limit: int = 100):
+    # 先尝试从缓震眲获取新闻列表
+    page = skip // limit + 1
+    # 从缓存获取
+    cached_list = await get_cache_news_list(category_id, page, limit)
+    if cached_list:
+        # return cached_list
+        # 要的是ORM对象
+        return [ News(**item) for item in cached_list ] # 转成ORM对象
+
     stmt = select(News).where(News.category_id == category_id).offset(skip).limit(limit)
     result = await db.execute(stmt)
-    return result.scalars().all()
+    news_list =  result.scalars().all()
+
+    # 写入缓存
+    if news_list:
+        # 先把 ORM 数据转成字典才能写入缓存
+        # ORM 转成 Pydantic, 再转字典
+        # by_alias = False 不使用别名，保存Python风格， 因为Redis 数据是给后端用的
+        news_data = [NewsItemBase.model_validate(item).model_dump(mode="json", by_alias=False) for item in news_list ]
+        await set_cache_news_list(category_id, page, limit, news_data)
+
+    return news_list
 
 
 async def get_news_count(db: AsyncSession, category_id: int):
