@@ -4,7 +4,7 @@ from starlette import status
 
 from config.db_config import get_db
 from models.users import User
-from schemas.users import UserRequest, UserAuthResponse, UserInfoResponse
+from schemas.users import UserRequest, UserAuthResponse, UserInfoResponse, UserUpdateRequest
 from crud import users
 from utils.auth import get_current_user
 from utils.response import success_response
@@ -43,4 +43,12 @@ async def login(user_data: UserRequest, db: AsyncSession = Depends(get_db)):
 
 @router.get("/info")
 async def get_user_info(user: User=Depends(get_current_user)):
+    return success_response(message="success", data=UserInfoResponse.model_validate(user))
+
+
+@router.put("/update")
+async def update_user_info(user_data: UserUpdateRequest,
+                           user: User = Depends(get_current_user),
+                           db: AsyncSession = Depends(get_db)):
+    await users.update_user(db, user.username, user_data )
     return success_response(message="success", data=UserInfoResponse.model_validate(user))

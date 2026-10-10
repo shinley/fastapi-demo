@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
 from uuid import uuid4
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from models.users import User, UserToken
-from schemas.users import UserRequest
+from schemas.users import UserRequest, UserUpdateRequest
 from utils import security
 
 
@@ -66,3 +66,15 @@ async def get_user_by_token(db: AsyncSession, token: str):
     user_query = select(User).where(User.id == db_token.user_id)
     user_result = await db.execute(user_query)
     return user_result.scalar_one_or_none()
+
+
+async def update_user(db: AsyncSession, username: str, user_data: UserUpdateRequest):
+    # user_data.model_dump()  转成字典
+    # **user_data.model_dump() 解包
+    query = (update(User).where(User.username == username)
+             .values(**user_data.model_dump(exclude_unset=True, exclude_none=True)))
+    result = await db.execute(query)
+    await db.commit()
+
+    # 检查更新
+    return result.rowcount > 0
