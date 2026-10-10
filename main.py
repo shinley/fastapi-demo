@@ -2,8 +2,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from routers import news, users
+from utils.execption_handlers import register_exception_handlers
 
 app = FastAPI()
+
+# 注册异常处理器
+register_exception_handlers(app)
 
 # 定义允许跨域请求的源列表（前端运行的地址）
 origins = [
